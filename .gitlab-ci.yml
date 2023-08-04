@@ -1,0 +1,44 @@
+stages:
+- package
+- build
+- notify
+package:
+  image: images.xch.com/supportform/nodejs:1.2
+  stage: package
+  tags:
+  - xch
+  script:
+  - cnpm install
+  - npm run build
+  - cp -R dist /home/arch/
+  - node /home/arch/index.js
+  - unzip -o dist.zip -d ./
+  - mv dist hsoft-oa
+  artifacts:
+    paths:
+    - ./*
+  except:
+  - oamaster
+docker-build:
+  image: images.xch.com/supportform/docker:1.1
+  stage: build
+  tags:
+  - xch
+  script:
+  - docker info
+  - docker login -u "admin" -p "hsoft@123" "images.xch.com"
+  - docker build --build-arg APPNAME=hsoft-oa -f DOCKERFILE -t images.xch.com/supportingplatform/hsoft-oa:1.0
+    .
+  - docker push images.xch.com/supportingplatform/hsoft-oa:1.0
+  - docker rmi images.xch.com/supportingplatform/hsoft-oa:1.0
+  except:
+  - oamaster
+notify:
+  image: images.xch.com/supportform/openjdk:1.0
+  stage: notify
+  tags:
+  - xch
+  script:
+  - curl http://www.baidu.com
+  except:
+  - oamaster
